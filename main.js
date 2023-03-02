@@ -24,6 +24,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+let currentUser;
 
 /** @type HtmlButtonElement */
 const loginButton = document.getElementById("btnLogin");
@@ -40,6 +41,10 @@ const signInForm = document.getElementById("formSignIn");
 const signInButton = document.getElementById("btnSignIn");
 /** @type {HTMLSpanElement} */
 const singInErrorLabel = document.getElementById("txtSignInError");
+/** @type {HTMLDivElement} */
+const cardGroup = document.getElementById("grpCardSection");
+/** @type {HTMLHeadingElement} */
+const cardGroupTitle = document.getElementById("txtCardGroupTitle");
 
 /**
  * 
@@ -57,13 +62,116 @@ function hideElement(element) {
     element.classList.add("d-none");
 }
 
+/**
+ * @param {string} entryName
+ * @returns {HTMLDivElement}
+ */
+function newAddCard(entryName) {
+    const column = document.createElement("div");
+    column.classList.add("col");
+
+    const card = document.createElement("div");
+    card.classList.add("card", "border-dark", "h-100", "w-100");
+
+    const cardBody = document.createElement("div");
+    cardBody.classList.add("card-body", "text-dark");
+
+    const addIconSpan = document.createElement("div");
+    addIconSpan.classList.add("w-100", "text-center");
+
+    const addIcon = document.createElement("i");
+    addIcon.classList.add("fa-solid", "fa-plus");
+    addIconSpan.appendChild(addIcon);
+    cardBody.appendChild(addIconSpan);
+
+    const cardContent = document.createElement("p");
+    cardContent.classList.add("card-text", "text-center");
+    cardContent.innerText = entryName;
+    cardBody.appendChild(cardContent);
+
+    card.appendChild(cardBody);
+    column.appendChild(card);
+    return column;
+}
+
+/**
+ * @param {string} title
+ * @param {string} content
+ * @returns {HTMLDivElement}
+ */
+function newCard(title, content) {
+    const column = document.createElement("div");
+    column.classList.add("col");
+
+    const card = document.createElement("div");
+    card.classList.add("card", "border-dark", "h-100", "w-100");
+
+    const cardBody = document.createElement("div");
+    cardBody.classList.add("card-body", "text-dark");
+
+    const cardTitle = document.createElement("h5");
+    cardTitle.classList.add("card-title");
+    cardTitle.innerText = title;
+    cardBody.appendChild(cardTitle);
+
+    const cardContent = document.createElement("p");
+    cardContent.classList.add("card-text");
+    cardContent.innerText = content;
+    cardBody.appendChild(cardContent);
+
+    card.appendChild(cardBody);
+    column.appendChild(card);
+    return column;
+}
+
+/**
+ * @param {HTMLElement} element
+ */
+function clearChildren(element) {
+    while (element.lastChild) {
+        element.removeChild(element.lastChild);
+    }
+}
+
+/**
+ * 
+ * @param {string} userId
+ * @returns {Promise<Array<T>>}
+ */
+async function getSquads(userId) {
+    try {
+        const squadsRef = collection(db, "squads");
+        const squadsQuery = query(squadsRef, where("owner", "==", userId));
+        const querySnapshot = await getDocs(squadsQuery);
+        return querySnapshot.docs.map((doc) => doc.data());
+    } catch (ex) {
+        console.error(ex);
+        return [];
+    }
+}
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
+        currentUser = user;
         currentUserLabel.innerText = user.isAnonymous ? "Anonymous User" : user.email;
         showElement(currentUserLabel);
         showElement(signOutButton);
+        showElement(cardGroup);
+        cardGroupTitle.innerText = "Squads";
+        clearChildren(cardGroup);
+
+        const squads = await getSquads(currentUser.uid);
+        for (const squad of squads) {
+            const members = squad.members.map((m) => m.name).join(", ");
+            cardGroup.appendChild(newCard(squad.name, members));
+        }
+        cardGroup.appendChild(newAddCard("Squad"));
         hideElement(loginButton);
     } else {
+        currentUser = null;
+        hideElement(currentUserLabel);
+        hideElement(signOutButton);
+        hideElement(cardGroup);
         showElement(loginButton);
     }
 });
