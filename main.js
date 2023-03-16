@@ -5,7 +5,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
-import { getSquads, getRetrospectives } from "./squads.js"
+import { getSquads } from "./squads.js"
+import { getRetrospectives } from "./retrospective.js"
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 // Your web app's Firebase configuration
