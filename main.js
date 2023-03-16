@@ -93,14 +93,15 @@ function newAddCard(create) {
 /**
  * @param {string} title
  * @param {string} content
+ * @param {() => Promise<void> | null} enter
  * @returns {HTMLDivElement}
  */
-function newCard(title, content) {
+function newCard(title, content, enter=undefined) {
     const column = document.createElement("div");
     column.classList.add("col");
 
     const card = document.createElement("div");
-    card.classList.add("card", "border-dark", "h-100", "w-100");
+    card.classList.add("card", "border-dark", "h-100", "w-100", "text-center");
 
     const cardBody = document.createElement("div");
     cardBody.classList.add("card-body", "text-dark");
@@ -114,6 +115,15 @@ function newCard(title, content) {
     cardContent.classList.add("card-text");
     cardContent.innerText = content;
     cardBody.appendChild(cardContent);
+
+    if (enter) {
+        const cardEnter = document.createElement("button");
+        cardEnter.setAttribute("href", "#");
+        cardEnter.classList.add("btn", "btn-primary");
+        cardEnter.innerText = "Select";
+        cardEnter.addEventListener("click", enter);
+        cardBody.appendChild(cardEnter);
+    }
 
     card.appendChild(cardBody);
     column.appendChild(card);
@@ -182,7 +192,9 @@ onAuthStateChanged(auth, async (user) => {
         const squads = await getSquads(currentUser.uid);
         for (const squad of squads) {
             const members = squad.members.map((m) => m.name).join(", ");
-            cardGroup.appendChild(newCard(squad.name, members));
+            cardGroup.appendChild(newCard(squad.name, members, async () => {
+                console.log(squad.squadId);
+            }));
         }
         cardGroup.appendChild(newAddCard(async () => {
             console.log("Add squad");
