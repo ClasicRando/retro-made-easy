@@ -133,6 +133,26 @@ function clearChildren(element) {
     }
 }
 
+class Squad {
+    /**
+     * 
+     * @param {string} squadId
+     * @param {Array<{name: string, uid: string?}>} members 
+     * @param {string} name 
+     * @param {string} owner 
+     */
+    constructor(squadId, members, name, owner) {
+        /** @type {string} */
+        this.squadId = squadId;
+        /** @type {Array<{name: string, uid: string?}>} */
+        this.members = members;
+        /** @type {string} */
+        this.name = name;
+        /** @type {string} */
+        this.owner = owner;
+    }
+}
+
 /**
  * 
  * @param {string} userId
