@@ -1,13 +1,11 @@
-import * as bootstrap from "bootstrap"
+import * as bootstrap from "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.esm.min.js"
 // Import the functions you need from the SDKs you need
 import {
-    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import {
-    doc, setDoc, addDoc, getDoc, getDocs, collection, query, where, limit, deleteDoc,
-    getFirestore, onSnapshot, updateDoc, writeBatch, increment, arrayUnion
-} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+import { getSquads, getRetrospectives } from "./squads.js"
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 // Your web app's Firebase configuration
@@ -139,73 +137,24 @@ function clearChildren(element) {
     }
 }
 
-class Squad {
-    /**
-     * 
-     * @param {string} squadId
-     * @param {Array<{name: string, uid: string?}>} members 
-     * @param {string} name 
-     * @param {string} owner 
-     */
-    constructor(squadId, members, name, owner) {
-        /** @type {string} */
-        this.squadId = squadId;
-        /** @type {Array<{name: string, uid: string?}>} */
-        this.members = members;
-        /** @type {string} */
-        this.name = name;
-        /** @type {string} */
-        this.owner = owner;
-    }
-}
-
-/**
- * 
- * @param {string} userId
- * @returns {Promise<Array<Squad>>}
- */
-async function getSquads(userId) {
-    try {
-        const squadsRef = collection(db, "squads");
-        const squadsQuery = query(squadsRef, where("owner", "==", userId));
-        const querySnapshot = await getDocs(squadsQuery);
-        return querySnapshot.docs.map((doc) => {
-            const data = doc.data();
-            return new Squad(doc.id, data.members, data.name, data.owner);
-        });
-    } catch (ex) {
-        console.error(ex);
-        return [];
-    }
-}
-
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
         currentUserLabel.innerText = user.isAnonymous ? "Anonymous User" : user.email;
-        showElement(currentUserLabel);
-        showElement(signOutButton);
-        showElement(cardGroup);
-        cardGroupTitle.innerText = "Squads";
-        clearChildren(cardGroup);
+        setCardView("Squads")
 
-        const squads = await getSquads(currentUser.uid);
+        const squads = await getSquads(db, currentUser.uid);
         for (const squad of squads) {
-            const members = squad.members.map((m) => m.name).join(", ");
-            cardGroup.appendChild(newCard(squad.name, members, async () => {
-                console.log(squad.squadId);
+            cardGroup.appendChild(newCard(squad.name, "", async () => {
+                await openSquad(squad.id, squad.name);
             }));
         }
         cardGroup.appendChild(newAddCard(async () => {
             console.log("Add squad");
         }));
-        hideElement(loginButton);
     } else {
         currentUser = null;
-        hideElement(currentUserLabel);
-        hideElement(signOutButton);
-        hideElement(cardGroup);
-        showElement(loginButton);
+        showLogin();
     }
 });
 
@@ -224,3 +173,41 @@ signInButton.addEventListener("click", async () => {
         console.error(error);
     }
 });
+
+/**
+ * 
+ */
+function showLogin() {
+    hideElement(currentUserLabel);
+    hideElement(signOutButton);
+    hideElement(cardGroup);
+    showElement(loginButton);
+}
+
+/**
+ * 
+ * @param {string} title 
+ */
+function setCardView(title) {
+    showElement(currentUserLabel);
+    showElement(signOutButton);
+    showElement(cardGroup);
+    cardGroupTitle.innerText = title;
+    clearChildren(cardGroup);
+    hideElement(loginButton);
+}
+
+/**
+ * 
+ * @param {string} squadId
+ * @param {string} name
+ */
+async function openSquad(squadId, name) {
+    setCardView(name);
+
+    const retrospectives = await getRetrospectives(db, squadId);
+    for (const retro of retrospectives) {
+        const content = retro.isDone ? "Done!" : "In progress";
+        cardGroup.appendChild(newCard(retro.date, content));
+    }
+}
