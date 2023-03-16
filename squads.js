@@ -129,7 +129,7 @@ export async function getRetrospectives(db, squadId) {
             const data = doc.data();
             return new Retrospective(
                 doc.id,
-                data.date,
+                data.date.toDate(),
                 data.isDone,
                 data.successes,
                 data.issues,
