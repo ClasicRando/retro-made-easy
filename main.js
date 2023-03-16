@@ -156,14 +156,17 @@ class Squad {
 /**
  * 
  * @param {string} userId
- * @returns {Promise<Array<T>>}
+ * @returns {Promise<Array<Squad>>}
  */
 async function getSquads(userId) {
     try {
         const squadsRef = collection(db, "squads");
         const squadsQuery = query(squadsRef, where("owner", "==", userId));
         const querySnapshot = await getDocs(squadsQuery);
-        return querySnapshot.docs.map((doc) => doc.data());
+        return querySnapshot.docs.map((doc) => {
+            const data = doc.data();
+            return new Squad(doc.id, data.members, data.name, data.owner);
+        });
     } catch (ex) {
         console.error(ex);
         return [];
