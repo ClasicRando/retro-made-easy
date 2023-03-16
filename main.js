@@ -63,31 +63,27 @@ function hideElement(element) {
 }
 
 /**
- * @param {string} entryName
+ * @param {() => Promise<void>} create
  * @returns {HTMLDivElement}
  */
-function newAddCard(entryName) {
+function newAddCard(create) {
     const column = document.createElement("div");
     column.classList.add("col");
 
     const card = document.createElement("div");
-    card.classList.add("card", "border-dark", "h-100", "w-100");
+    card.classList.add("card", "border-dark", "h-100", "w-100", "text-center");
 
     const cardBody = document.createElement("div");
     cardBody.classList.add("card-body", "text-dark");
 
-    const addIconSpan = document.createElement("div");
-    addIconSpan.classList.add("w-100", "text-center");
+    const addButton = document.createElement("button");
+    addButton.classList.add("btn", "btn-primary");
+    addButton.addEventListener("click", create);
 
     const addIcon = document.createElement("i");
     addIcon.classList.add("fa-solid", "fa-plus");
-    addIconSpan.appendChild(addIcon);
-    cardBody.appendChild(addIconSpan);
-
-    const cardContent = document.createElement("p");
-    cardContent.classList.add("card-text", "text-center");
-    cardContent.innerText = entryName;
-    cardBody.appendChild(cardContent);
+    addButton.appendChild(addIcon);
+    cardBody.appendChild(addButton);
 
     card.appendChild(cardBody);
     column.appendChild(card);
@@ -188,7 +184,9 @@ onAuthStateChanged(auth, async (user) => {
             const members = squad.members.map((m) => m.name).join(", ");
             cardGroup.appendChild(newCard(squad.name, members));
         }
-        cardGroup.appendChild(newAddCard("Squad"));
+        cardGroup.appendChild(newAddCard(async () => {
+            console.log("Add squad");
+        }));
         hideElement(loginButton);
     } else {
         currentUser = null;
