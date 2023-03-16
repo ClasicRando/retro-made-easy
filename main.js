@@ -43,6 +43,14 @@ const singInErrorLabel = document.getElementById("txtSignInError");
 const cardGroup = document.getElementById("grpCardSection");
 /** @type {HTMLHeadingElement} */
 const cardGroupTitle = document.getElementById("txtCardGroupTitle");
+let options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+};
+/** @type */
+const dateFormat = new Intl.DateTimeFormat("en-US", options);
 
 /**
  * 
@@ -208,6 +216,6 @@ async function openSquad(squadId, name) {
     const retrospectives = await getRetrospectives(db, squadId);
     for (const retro of retrospectives) {
         const content = retro.isDone ? "Done!" : "In progress";
-        cardGroup.appendChild(newCard(retro.date, content));
+        cardGroup.appendChild(newCard(dateFormat.format(retro.date), content));
     }
 }
