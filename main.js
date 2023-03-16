@@ -214,8 +214,12 @@ async function openSquad(squadId, name) {
     setCardView(name);
 
     const retrospectives = await getRetrospectives(db, squadId);
+    const needNew = retrospectives.findIndex(r => !r.isDone) == -1;
     for (const retro of retrospectives) {
         const content = retro.isDone ? "Done!" : "In progress";
         cardGroup.appendChild(newCard(dateFormat.format(retro.date), content));
+    }
+    if (needNew) {
+        newAddCard(async () => console.log("create new retro"));
     }
 }
